@@ -1,0 +1,88 @@
+{
+  "bin": {
+    "watcher": "dist/main/index.js"
+  },
+  "keywords": [
+    "monorepo-watch",
+    "file-watcher",
+    "lerna-watcher"
+  ],
+  "files": [
+    "dist"
+  ],
+  "types": "dist/types",
+  "name": "monorepo-watch",
+  "version": "0.3.0",
+  "description": "A package for monorepos that watches a specific package and it's dependencies.",
+  "module": "dist/main/index.js",
+  "exports": {
+    ".": {
+      "require": "./dist/main/index.js"
+    }
+  },
+  "repository": "https://github.com/utkarshk384/monorepo-watch.git",
+  "homepage": "https://github.com/utkarshk384/monorepo-watch",
+  "author": "Utkarsh Kumar",
+  "license": "MIT",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "scripts": {
+    "clean": "shx rm -r dist ",
+    "clean:modules": " shx rm -r node_modules",
+    "lint": "tsc --noEmit && eslint --ext .js,.jsx,.ts,.tsx src --fix",
+    "build": "rm -rf dist && yarn build:package && yarn build:types",
+    "build:package": "yarn rollup -c ./rollup.config.js",
+    "build:types": "tsc --emitDeclarationOnly --declaration --declarationDir dist/types",
+    "watch": "tsc --watch",
+    "dev": "yarn build && npm uninstall . && npm  i -g .",
+    "release": "yarn build && release-it"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^20.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.4",
+    "@rollup/plugin-typescript": "^8.2.5",
+    "@types/async-lock": "^1.1.3",
+    "@types/chalk": "^2.2.0",
+    "@types/cross-spawn": "^6.0.2",
+    "@types/glob": "^7.1.4",
+    "@types/graceful-fs": "^4.1.5",
+    "@types/is-glob": "^4.0.2",
+    "@types/lodash.mergewith": "^4.6.6",
+    "@types/node": "^16.4.13",
+    "@types/yargs": "^17.0.2",
+    "@typescript-eslint/eslint-plugin": "^4.29.3",
+    "@typescript-eslint/parser": "^4.29.3",
+    "auto-changelog": "^2.3.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "prettier": "^2.3.2",
+    "rollup": "^2.56.2",
+    "rollup-plugin-preserve-shebangs": "^0.2.0",
+    "tslib": "^2.3.1",
+    "typescript": "^4.3.5"
+  },
+  "bugs": {
+    "url": "https://github.com/Utkarshk384/monorepo-watch/issues"
+  },
+  "peerDependencies": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@manypkg/find-root": "^1.1.0",
+    "@manypkg/get-packages": "^1.1.1",
+    "async-lock": "^1.3.0",
+    "chalk": "^4.1.2",
+    "chokidar": "^3.5.2",
+    "cross-spawn": "^7.0.3",
+    "glob": "^7.1.7",
+    "graceful-fs": "^4.2.8",
+    "lodash.mergewith": "^4.6.2",
+    "ora": "^6.0.0",
+    "walkdir": "^0.4.1",
+    "yargs": "^17.1.1"
+  }
+}
