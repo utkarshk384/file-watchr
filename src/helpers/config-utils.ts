@@ -5,9 +5,9 @@ import { defaultConfig } from "./consts"
 import { isAsync } from "./utils"
 
 import type { ArgsOptions, AsyncResponseType, Dict, DynamicLoad, InternalConfig } from "src/types"
-import { Logger } from "./logger"
+import { Logger } from "../logger/logger"
 
-const logger = Logger.getInstance()
+const logger = Logger.GetInstance()
 
 export const MergeNormalizeConfig = (config: InternalConfig, argv: ArgsOptions): InternalConfig => {
 	config = normalizeConfig(config)
@@ -25,7 +25,7 @@ const normalizeConfig = (_config: InternalConfig): InternalConfig => {
 		Object.keys(config.actions).forEach((actionName) => {
 			const action = config.actions?.[actionName]
 			if (typeof action === "function" && !isAsync(action))
-				logger.LogError(`Action ${actionName} is not async`)
+				logger.Error(`Action ${actionName} is not async`)
 		})
 	}
 
@@ -38,7 +38,7 @@ const normalizeConfig = (_config: InternalConfig): InternalConfig => {
 		config["include"] = [process.cwd()]
 
 	if (config.runScripts?.length === 0 && !config.actions)
-		logger.LogError("Please pass a command or a list of actions to the config file")
+		logger.Error("Please pass a command or a list of actions to the config file")
 
 	/* Check if exclude exists */
 	if (!config?.exclude) config.exclude = []

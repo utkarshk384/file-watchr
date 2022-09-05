@@ -1,7 +1,8 @@
 import chalk from "chalk"
+import ora, { Ora } from "ora"
 import readline from "readline"
 
-import { MODE } from "./consts"
+import { MODE } from "../helpers/consts"
 
 import type {
 	ArrowFunc,
@@ -9,9 +10,9 @@ import type {
 	LoggerLevelExtended,
 	LoggerTheme,
 	LoggerLevel,
-} from "../types"
+} from "./types"
 
-abstract class Primitives {
+abstract class LoggerResolvers {
 	public theme: LoggerTheme
 	protected stdout: NodeJS.WriteStream
 	protected br: string
@@ -42,24 +43,16 @@ abstract class Primitives {
 		}
 	}
 
-	public get BR(): string {
-		return this.br
-	}
-
-	public get CLR(): string {
-		return this.clr
-	}
-
 	public clearLastLines(count = 1): void {
 		readline.moveCursor(process.stdout, 0, -count)
 		readline.clearScreenDown(process.stdout)
 	}
 
-	public ClearScreen(): void {
+	public clearScreen(): void {
 		if (MODE !== "debug") this.stdout.write(this.clr)
 	}
 
-	public LineBreak(): void {
+	public lineBreak(): void {
 		this.stdout.write(this.br)
 	}
 
@@ -73,7 +66,7 @@ abstract class Primitives {
 				params.message = `  ${params.message}  `
 
 			/* Clear Screen */
-			if (params.clr) this.ClearScreen()
+			if (params.clr) this.clearScreen()
 
 			/* For Line Breaks */
 			if (params.br === "before") params.message = this.br + params.message
@@ -133,7 +126,7 @@ abstract class Primitives {
 	}
 }
 
-abstract class LoggerBase extends Primitives {
+abstract class LoggerBase extends LoggerResolvers {
 	constructor() {
 		super()
 		this.setEnvVar()
@@ -156,7 +149,7 @@ abstract class LoggerBase extends Primitives {
 		process.env = env
 	}
 
-	public Raw(params: Omit<LoggerActions, "message">, level: LoggerLevelExtended): chalk.Chalk {
+	public raw(params: Omit<LoggerActions, "message">, level: LoggerLevelExtended): chalk.Chalk {
 		let theme = this.resolveTheme(level)
 		theme = this.resolveStyles(theme, params)
 
@@ -177,38 +170,43 @@ abstract class LoggerBase extends Primitives {
 		this.stdout.write(theme(params))
 	}
 
-	public GroupLogs(cb: ArrowFunc): Promise<void> {
+	public groupLogs(cb: ArrowFunc): Promise<void> {
 		return new Promise((resolve) => {
 			resolve(cb())
 		})
 	}
 
-	public asyncGroupLogs(cb: ArrowFunc): Promise<void> {
+	public asyncgroupLogs(cb: ArrowFunc): Promise<void> {
 		return new Promise((resolve) => {
 			resolve(cb())
 		})
 	}
 
-	public async asyncLog(params: LoggerActions | string, level: LoggerLevelExtended): Promise<void> {
-		return new Promise((resolve) => {
-			resolve(this.log(params, level))
-		})
+	public createSpinner(text: string): Ora {
+		const spinner = ora(text)
+
+		spinner.color = "cyan"
+
+		spinner.spinner = {
+			interval: 80,
+			frames: ["⠄", "⠆", "⠇", "⠋", "⠙", "⠸", "⠰", "⠠", "⠰", "⠸", "⠙", "⠋", "⠇", "⠆"],
+		}
+
+		return spinner
 	}
 }
 
 export type LoggerType = LoggerWrapper
-
-class LoggerWrapper extends LoggerBase {
+export class LoggerWrapper extends LoggerBase {
 	private static _instance: LoggerWrapper
 
 	private constructor() {
 		super()
 	}
 
-	public static getInstance(): LoggerWrapper {
-		if (!LoggerWrapper._instance) {
-			LoggerWrapper._instance = new LoggerWrapper()
-		}
+	public static GetInstance(): LoggerWrapper {
+		if (!LoggerWrapper._instance) LoggerWrapper._instance = new LoggerWrapper()
+
 		return LoggerWrapper._instance
 	}
 
@@ -233,7 +231,7 @@ class LoggerWrapper extends LoggerBase {
 		}
 
 		if (typeof asyncFunc === "function") {
-			this.asyncGroupLogs(() => execLogs()).then(() => {
+			this.asyncgroupLogs(() => execLogs()).then(() => {
 				asyncFunc()
 			})
 			return execLogs
@@ -243,7 +241,7 @@ class LoggerWrapper extends LoggerBase {
 		return execLogs
 	}
 
-	public OptionsLogger(optionToggler: boolean, autoOptions?: boolean): void {
+	public ShowOptions(optionToggler: boolean, autoOptions?: boolean): void {
 		if (!optionToggler && !autoOptions)
 			this.log({ message: "o - show options", br: "after", dim: true }, "log")
 		else {
@@ -255,23 +253,13 @@ class LoggerWrapper extends LoggerBase {
 	}
 
 	public PerformAction(path: string): void {
-		this.log({ message: "Performing Action", clr: true, br: "after" }, "log")
+		this.clearScreen()
+		this.log("Performing Action", "debug")
 		this.WithBackground("File Changed", `${path}`, "info")
 	}
 
-	public LogError(message: string): void {
+	public Error(message: string): void {
 		this.WithBackground({ message: "Error", br: "before" }, message, "error")
-		process.exit(1)
-	}
-
-	public EndLogger(
-		eventName: string,
-		Path: string,
-		opts: { optionToggler: boolean; autoOptions: boolean }
-	): void {
-		this.WithBackground(eventName, `${Path}`, "success", () => {
-			setTimeout(() => this.OptionsLogger(opts.optionToggler, opts.autoOptions), 250)
-		})
 	}
 }
 

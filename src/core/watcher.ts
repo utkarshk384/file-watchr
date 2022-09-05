@@ -7,50 +7,37 @@ import {
 	ReadFile,
 	RemoveFile,
 	TEMP_OPTS_FILE,
-	UpdateOptsFileDataType,
 } from "src/helpers"
 
-import type { LoggerType } from "src/helpers"
-import { InternalConfig } from "src/types"
-import { onChange, OnChangeFn } from "./events"
+import { CreateInstanceInterface, InstanceType, UpdateOptsFileDataType } from "src/types"
+import { AllEvents, OnChangeFn } from "./events"
 
-export type DefaultParams = {
-	logger: LoggerType
-	instance: chokidar.FSWatcher
-	OptionsToggle: Observable<boolean>
-	config: InternalConfig
-}
-
-type CreateInstanceInterface = {
-	config: InternalConfig
-	include: string[]
-}
-
-export const CreateInstances = (opts: CreateInstanceInterface): DefaultParams => {
-	const logger = Logger.getInstance()
+export const CreateInstances: CreateInstanceInterface = (opts) => {
+	const logger = Logger.GetInstance()
 	const instance = chokidar.watch(opts.include, { ...opts.config.options, ignoreInitial: true })
 	const OptionsToggle = new Observable<boolean>(false)
 
 	return { logger, instance, OptionsToggle, config: opts.config }
 }
 
-export const InitialSetup = (params: DefaultParams): DefaultParams => {
-	const { logger, instance, OptionsToggle, config } = params
+export const InitialSetup = (Instance: InstanceType): InstanceType => {
+	const { logger, instance, OptionsToggle, config } = Instance
 
 	process.on("uncaughtException", (err: Error, origin: string) => {
-		logger.LineBreak()
+		logger.lineBreak()
 
+		console.log(origin)
 		logger.WithBackground("Error", `${err.message}. ${origin}`, "error")
 
-		onChange(params)
+		AllEvents(Instance)
 	})
 
 	process.on("unhandledRejection", (err: Error, origin: string) => {
-		logger.LineBreak()
+		logger.lineBreak()
 
 		logger.WithBackground("Error", `${err.message}. ${origin}`, "error")
 
-		onChange(params)
+		AllEvents(Instance)
 	})
 
 	CreateFile(FILENAME)
@@ -61,11 +48,11 @@ export const InitialSetup = (params: DefaultParams): DefaultParams => {
 	process.stdin.setRawMode(true)
 	process.stdin.setEncoding("utf8")
 
-	return params
+	return Instance
 }
 
-export const SetKeyboardListeners = (params: DefaultParams): DefaultParams => {
-	const { logger, OptionsToggle, config } = params
+export const SetKeyboardListeners = (Instance: InstanceType): InstanceType => {
+	const { logger, OptionsToggle, config } = Instance
 
 	const baseKeyPressEvent = (data: Buffer): void => {
 		const key = String(data)
@@ -77,17 +64,17 @@ export const SetKeyboardListeners = (params: DefaultParams): DefaultParams => {
 				logger.clearLastLines(2)
 
 				OptionsToggle.setValue(true)
-				logger.OptionsLogger(OptionsToggle.value, config.autoShowOptions)
+				logger.ShowOptions(OptionsToggle.value, config.autoShowOptions)
 			}
 		}
 
 		switch (key) {
 			case "\u0003":
-				close(params)
+				close(Instance)
 				return
 
 			case "q":
-				close(params)
+				close(Instance)
 				break
 		}
 	}
@@ -99,31 +86,31 @@ export const SetKeyboardListeners = (params: DefaultParams): DefaultParams => {
 
 		switch (key) {
 			case "a": {
-				const message = JSON.stringify(prettyPrintWatchedFiles(params, true), null, 2)
+				const message = JSON.stringify(prettyPrintWatchedFiles(Instance, true), null, 2)
 				logger.WithBackground({ message: "Watched Files Verbose", br: "before" }, message, "log")
 				break
 			}
 
 			case "w": {
-				const message = JSON.stringify(prettyPrintWatchedFiles(params), null, 2)
+				const message = JSON.stringify(prettyPrintWatchedFiles(Instance), null, 2)
 				logger.WithBackground({ message: "Watched Files", br: "before" }, message, "log")
 				break
 			}
 
 			case "c":
-				logger.ClearScreen()
-				readyMessage(params)
+				logger.clearScreen()
+				readyMessage(Instance)
 				break
 
 			case "r": {
 				const { lastFile, stats } = ReadFile<UpdateOptsFileDataType>(TEMP_OPTS_FILE)
 
 				if (!lastFile) {
-					logger.WithBackground("Info", "No previous file found", "info")
+					logger.WithBackground("Info", "No file found to run a change event.", "info")
 					break
 				}
 
-				OnChangeFn(lastFile, stats, params, true)
+				OnChangeFn(lastFile, stats, Instance, true)
 				break
 			}
 		}
@@ -141,21 +128,21 @@ export const SetKeyboardListeners = (params: DefaultParams): DefaultParams => {
 
 	OptionsToggle.setValue(true)
 
-	return params
+	return Instance
 }
 
-const readyMessage = (params: DefaultParams): void => {
-	const { logger, OptionsToggle, config } = params
-	logger.ClearScreen()
+const readyMessage = (Instance: InstanceType): void => {
+	const { logger, OptionsToggle, config } = Instance
+	logger.clearScreen()
 	logger.WithBackground("Ready", "Now watching for changes", "success", () => {
-		setTimeout(() => logger.OptionsLogger(OptionsToggle.value, config.autoShowOptions), 500)
+		setTimeout(() => logger.ShowOptions(OptionsToggle.value, config.autoShowOptions), 500)
 	})
 }
 
-const close = (params: DefaultParams): void => {
-	const { instance, logger } = params
+const close = (Instance: InstanceType): void => {
+	const { instance, logger } = Instance
 	instance.close().then(() => {
-		logger.LineBreak()
+		logger.lineBreak()
 		logger.WithBackground("Closed", "Sucessfully stopped watching files", "error")
 
 		RemoveFile(FILENAME)
@@ -165,8 +152,8 @@ const close = (params: DefaultParams): void => {
 	})
 }
 
-const prettyPrintWatchedFiles = (params: DefaultParams, detailed = false): string[] => {
-	const { instance, config } = params
+const prettyPrintWatchedFiles = (Instance: InstanceType, detailed = false): string[] => {
+	const { instance, config } = Instance
 	const watchFiles: string[] = []
 
 	const watched = instance.getWatched()

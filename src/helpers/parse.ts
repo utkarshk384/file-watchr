@@ -1,12 +1,12 @@
 import yargs from "yargs"
 import { hideBin } from "yargs/helpers"
-import { Logger } from "./logger"
+import { Logger } from "../logger/logger"
 
 import type { Dict, ArgsOptions, InternalConfig } from "../types"
 import { getConfigFile } from "./config-utils"
 
 /* Logger */
-const logger = Logger.getInstance()
+const logger = Logger.GetInstance()
 
 /* Args options */
 
@@ -46,10 +46,10 @@ if (argv.config === "") {
 const configPath = argv.config
 
 const Config: InternalConfig = (await getConfigFile(configPath).catch((err) =>
-	logger.LogError(err)
+	logger.Error(err)
 )) as InternalConfig
 
-if (!Config) logger.LogError("No config file found")
+if (!Config) logger.Error("No config file found")
 
 const config = (Object.assign({}, Config) as unknown as Dict<any>).default
 

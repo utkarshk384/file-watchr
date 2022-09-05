@@ -1,13 +1,9 @@
 import fs from "fs"
 import path from "path"
-import { Dict } from "src/types"
+import { Dict, UpdateOptsFileDataType } from "src/types"
 
 import { TEMP_OPTS_FILE, TMP_DIR } from "./consts"
 
-export type UpdateOptsFileDataType = {
-	lastFile: string
-	stats: fs.Stats
-}
 
 /* 
   Exports

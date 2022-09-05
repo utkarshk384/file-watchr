@@ -40,14 +40,11 @@ const external = [
   "glob",
   "is-glob",
   "yargs/helpers",
-  "@manypkg/get-packages",
   "os",
   "chalk",
-  "graceful-fs",
   "cross-spawn",
-  "async-lock",
   "ora",
-  "walkdir"
+  "walkdir",
 ];
 
 const config = {

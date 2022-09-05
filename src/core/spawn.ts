@@ -1,22 +1,19 @@
 import { Transform } from "stream"
 import { spawn } from "cross-spawn"
-import type { ChildProcess, StdioOptions } from "child_process"
+import type { StdioOptions } from "child_process"
 
 import { ANSI_REGEX, YARN_ERROR_MSGS } from "src/helpers/consts"
-import { Logger, Observable, LoggerType } from "src/helpers"
+import { Logger, Observable } from "src/helpers"
 
-import type { ActionOpts, InternalConfig, TransformType } from "src/types"
-import { DefaultParams } from "./watcher"
+import type {
+	InstanceType,
+	SpawnedInstance,
+	SpawnedInstanceInterface,
+	TransformType,
+} from "src/types"
 
-type SpawnedInstance = {
-	cp: ChildProcess
-	err: Observable<boolean>
-	logger: LoggerType
-	config: InternalConfig
-}
-
-export const Spawn = (params: DefaultParams, options: ActionOpts): SpawnedInstance => {
-	const { config, logger } = params
+export const Spawn: SpawnedInstanceInterface = (Instance, options) => {
+	const { config, logger } = Instance
 
 	const err = new Observable<boolean>(false)
 
@@ -31,14 +28,16 @@ export const Spawn = (params: DefaultParams, options: ActionOpts): SpawnedInstan
 		err,
 		logger,
 		config,
+		Instance,
+		eventOnErr: options.eventOnErr,
 	}
 }
 
 export const SetupChildProcess = (spawned: SpawnedInstance): void => {
-	const { config, cp, logger, err } = spawned
+	const { config, cp, logger, err, eventOnErr, Instance } = spawned
 
 	/* Setup Listeners */
-	cp.stderr?.once("data", (data) => stderrCB(data, err))
+	cp.stderr?.once("data", (data) => stderrCB(data, err, eventOnErr, Instance))
 
 	/* Pipe Stream */
 	const transformer = generateTransformer(async (chunk, _, done) => {
@@ -49,11 +48,7 @@ export const SetupChildProcess = (spawned: SpawnedInstance): void => {
 			return
 		}
 
-		//TODO: Add a concrete way to catch error in the stream
 		if (line.includes("error")) {
-			console.log({ line })
-			// logger.WithBackground("Error", line, "error")
-
 			cp.kill() // Kill process when an error occurs
 			done()
 			return
@@ -61,14 +56,14 @@ export const SetupChildProcess = (spawned: SpawnedInstance): void => {
 		done(null, chunk)
 	})
 
-	logger.WithBackground("Debug", "Piping child stream to main process", "debug")
+	logger.log("Debug - Piping child stream to main process\n", "debug")
 
 	if (cp.stdout) cp.stdout.pipe(transformer).pipe(process.stdout).setEncoding("utf-8")
 	else if (!cp.stdout && !config.noChildProcessLogs)
 		logger.WithBackground("Debug", "Couldn't pipe transformer to 'process.stdout'", "debug")
 }
 
-const getStdIO = (config: DefaultParams["config"]): StdioOptions => {
+const getStdIO = (config: InstanceType["config"]): StdioOptions => {
 	return config.noChildProcessLogs ? "ignore" : ["inherit", "pipe", "pipe"]
 }
 
@@ -100,13 +95,22 @@ const stripANSI = (data: Buffer): string => {
 	return cleanData
 }
 
-const stderrCB = (bufferedData: Buffer, err: Observable<boolean>): void => {
-	const data = String(bufferedData)
-	const logger = Logger.getInstance()
+export type stderrCBInterface = (
+	bufferedData: Buffer,
+	err: Observable<boolean>,
+	eventOnErr: (Instance: InstanceType) => void,
+	Instance: InstanceType
+) => void
 
+const stderrCB: stderrCBInterface = (bufferedData, err, eventOnErr, Instance): void => {
+	const data = String(bufferedData)
+	const logger = Logger.GetInstance()
+
+	console.log(err.value)
 	if (err.value) return
 
 	logger.WithBackground("Error", "", "error")
 	logger.log(data, "error")
 	if (YARN_ERROR_MSGS.includes(data)) err.setValue(true)
+	eventOnErr(Instance)
 }

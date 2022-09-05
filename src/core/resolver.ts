@@ -1,20 +1,16 @@
 import fs from "fs"
 import path from "path"
 
-import type { Dict, DependenciesPathType } from "../types"
+import type { Dict, ResolvePackageInterface } from "../types"
 import { WalkDirectory } from "src/helpers"
 
-type ResolvePackageJSONInterface = (
-	root: string,
-	includeFolders: DependenciesPathType[]
-) => string[]
 /**
  * @function
  * @name ResolvePackageJSON
  * @param { string } root - Path from which the serach will start
  * @param { DependenciesPathType } includeFolders - List of package name and folders that was given by the user
  */
-export const ResolvePackageJSON: ResolvePackageJSONInterface = (root, includeFolders) => {
+export const ResolvePackageJSON: ResolvePackageInterface = (root, includeFolders) => {
 	const packageJSON: string[] = []
 	const paths: string[] = []
 

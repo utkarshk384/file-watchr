@@ -1,5 +1,5 @@
-import { Stats } from "fs"
 import p from "path"
+import { WalkDirectoryInterface } from "src/types"
 import walk from "walkdir"
 
 export function convertPath(root: string, absPath: string): string {
@@ -46,16 +46,7 @@ export class Observable<T> {
 	}
 }
 
-type WalkDirectoryCallbackOpts = {
-	filePath: string
-	stats: Stats
-}
-type WalkDirectoryType = (
-	dirPath: string,
-	callback: (opts: WalkDirectoryCallbackOpts) => void
-) => void
-
-export const WalkDirectory: WalkDirectoryType = (dirPath, callback) => {
+export const WalkDirectory: WalkDirectoryInterface = (dirPath, callback) => {
 	const ignoreDir = ["node_modules", ".git", "build", "dist", "test", "docs", "examples", "public"]
 	walk.sync(dirPath, function (path, stats) {
 		if (!path) return

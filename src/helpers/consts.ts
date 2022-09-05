@@ -26,7 +26,6 @@ export const MODE: envModes = (process.env.MODE as envModes) || "info"
 
 if (!["info", "debug"].includes(MODE)) throw new Error(`Invalid MODE: ${MODE}`)
 
-console.log(MODE)
 export const ANSI_REGEX =
 	// eslint-disable-next-line no-control-regex
 	/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g

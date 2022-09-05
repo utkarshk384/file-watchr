@@ -2,7 +2,7 @@
 
 import { ResolvePackageJSON } from "./core/resolver"
 import { CreateInstances, InitialSetup, SetKeyboardListeners } from "./core/watcher"
-import { onChange } from "./core/events"
+import { AllEvents } from "./core/events"
 
 import { Config, argv, MergeNormalizeConfig } from "./helpers"
 import { DependenciesPathType } from "./types"
@@ -18,4 +18,4 @@ const include = [
 let Instance = CreateInstances({ config, include })
 Instance = InitialSetup(Instance)
 Instance = SetKeyboardListeners(Instance)
-onChange(Instance)
+AllEvents(Instance)
