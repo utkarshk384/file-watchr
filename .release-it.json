@@ -4,7 +4,12 @@
     "requireCleanWorkingDir": true
   },
   "github": {
-    "release": true
+    "release": true,
+    "releaseName": "Release v${version}",
+    "tokenRef": "$GITHUB_TOKEN"
+  },
+  "npm":{
+    "publish": true
   },
   "hooks": {
     "after:bump": "yarn auto-changelog -p --hide-credit --hide-empty-releases -t changelog-template.hbs"

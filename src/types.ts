@@ -142,7 +142,6 @@ export type DependenciesPathType = {
 export type IConfig = (
 	| {
 			watchType: "Node"
-			packageJSON: string
 			dependenciesPath?: DependenciesPathType[]
 	  }
 	| {
@@ -154,4 +153,9 @@ export type IConfig = (
 export type InternalConfig = Required<BaseConfig> & {
 	watchType: "Node" | "Raw"
 	dependenciesPath?: DependenciesPathType[]
+}
+
+export const Config: IConfig = {
+	root: process.cwd(),
+	watchType: "Node",
 }

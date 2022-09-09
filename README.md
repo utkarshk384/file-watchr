@@ -22,13 +22,15 @@ Terminals that support colors are:
 ## Installation
 
 ```sh
-npm install --save monorepo-watch
+npm install --save file-watchr
+npm install -g file-watchr # Optional way to add the packge globally
 ```
 
 or
 
 ```sh
-yarn add monorepo-watch
+yarn add file-watchr
+yarn add global file-watchr # Optional way to add the packge globally
 ```
 
 <br/>
@@ -36,31 +38,40 @@ yarn add monorepo-watch
 
 ## Usage
 
-1. Create a config file in the root of the project directory.
+See [configuration](https://https://github.com/Utkarshk384/monorepo-watch#Configuration) section below on how to configure your watcher.
+
+1. Create a config file in the working directory.
    </br>
    Eg:
 
 ```
-packages
-├── pkg1
-│   ├── src
-│   └── package.json
-└── pkg2
-    ├── src
-    └── package.json
-package.json
-lerna.json
+src
+├── dir1
+│   ├── file1
+│   └── file2
+└── dir2
+    ├── file1
+    └── file2
 watcher.config.js <--root
 ```
 
-See [configuration](https://https://github.com/Utkarshk384/monorepo-watch#Configuration) section below on how to configure your watcher.
 
-2. Now run the follow command from any of your packages to get the watcher running.
+
+2. Now write the following configuration in the config file.
+```js
+module.exports = {
+	root: process.cwd(),
+	watchType: "Raw", // Can be "Node" or "Raw" see configuration section below for more details
+}
+```
+3. Now run the following command in the terminal.
    <br/>
-   As a example, I am running the command from `packages/pkg1`
-
 ```sh
 npm run watcher -c ../../watcher.config.js -i src
+```
+or
+```sh
+yarn watcher -c ../../watcher.config.js -i src
 ```
 
 The `-c` flag is the config file path and `-i` is the dirs to include.
@@ -68,7 +79,7 @@ For multiple dirs use `-i={"src","lib", etc...}`
 
 <br />
 
-This will watch the `src` directory and resolve all it's dependencies and watch its `src` directory as well.
+This will watch the `src` directory for any file changes.
 
 <br/>
 <br/>
@@ -77,13 +88,13 @@ This will watch the `src` directory and resolve all it's dependencies and watch 
 
 NOTE: Only [CommonJS](https://medium.com/@cgcrutch18/commonjs-what-why-and-how-64ed9f31aa46) is supported for the config file
 
-```typescript
+```ts
 //watcher.config.js
 
 
 /**
  * Include types for ease of use
- * @type {import('monorepo-watch/dist/types/types').IConfig}
+ * @type {import('file-watchr/dist/types/types.d.ts').IConfig}
  */
 
 module.exports = {
@@ -91,33 +102,25 @@ module.exports = {
      * @required
      * @default process.cwd()
      * 
-     * The root of the current pacakge.
+     * The root directory of the project
     */
-    packageRoot: string,
-
-    /**
-     * @optional
-     * @default {`name` Field taken from one of the `package.json` 
-     * from the packages}
-     * 
-     * The scoped package name.
-     * Eg: @mypackage/pkg1, the prefix here is `@mypackge`
-    */
-    prefix: string,
+    root: string,
 
     /**
      * @optional
      * @default ["src"]
      * 
+     * Can be passed as command-line argument as well.
      * The directories to be watched inside the package folder.
      * 
-     * Globbing supported
+     * Globbing is supported.
     */
     include: string[],
 
     /**
-     * @optional
+     * @required
      * @default {}
+     * 
      * 
      * Options that is directly passed to the `chokidar.watch` method.
      * Please refer to the https://github.com/paulmillr/chokidar#api
@@ -128,17 +131,22 @@ module.exports = {
     /**
      * @optional
      * @type {
-     *  add: (path: string, stats: fs.Stats) => any
-     *  addDir: (path: string, stats: fs.Stats) => any
-     *  change: (path: string, stats: fs.Stats) => any
-     *  unlink: (path: string) => any
-     *  unlinkDir: (path: string) => any
-     * }
+            add?: (opts: ActionOpts) => Promise<void>
+            addDir?: (opts: ActionOpts) => Promise<void>
+            unlink?: (opts: ActionOpts) => Promise<void>
+            unlinkDir?: (opts: ActionOpts) => Promise<void>
+            change: (opts: ActionOpts) => Promise<void>
+        } EventAction
+     *
+     * @type {
+        filePath: string;
+        stats: fs.Stats;
+        } ActionOpts
      * 
      * This is the action that is to be performed when different events 
      * occur.
     */
-    actions: EventActionWatchActions,
+    actions: EventAction,
 
     /**
      * @optional
@@ -153,30 +161,6 @@ module.exports = {
      * @optional
      * @default true
      * 
-     * If true, the watcher will resolve dev dependencies and watch
-     * those as well. 
-     * 
-     * Note: The watcher will only resolve dependencies that are within
-     *       the package. It won't resolve any node_modules.
-     */
-    resolveDevDependencies: boolean,
-    
-    /**
-     * @optional
-     * @default true
-     * 
-     * If true, the watcher will resolve peer dependencies and watch
-     * those as well. 
-     * 
-     * Note: The watcher will only resolve dependencies that are within
-     *       the package. It won't resolve any node_modules.
-     */
-    resolvePeerDependencies: boolean,
-
-    /**
-     * @optional
-     * @default true
-     * 
      * If true, the watcher will not pipe any logs to process.stdout 
      * and set the stdio to "ignore". Only applicable for situations  
      * where `runScripts` is defined.
@@ -184,5 +168,26 @@ module.exports = {
      */
     noChildProcessLogs: boolean,
 
+    /**
+     * @optional
+     * @default true
+     * 
+     * If true, then all available options will be automatically be displayed.
+     */
+    autoShowOptions: boolean,
+
+    /**
+     * @optional
+     * @default []
+     * @note Only available for `Node` watchType.
+     * @type {
+        name: string
+        folders: string[]
+       } DependenciesPathType
+     * 
+     * A list of directories that can be added outside of the root directory. A common use case is when you have a monorepo.
+     */
+    dependenciesPath: DependenciesPathType[],
+        
 }
 ```

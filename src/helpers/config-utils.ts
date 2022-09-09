@@ -46,6 +46,9 @@ const normalizeConfig = (_config: InternalConfig): InternalConfig => {
 	/* Normalize Node opts */
 	if (!config?.dependenciesPath) config.dependenciesPath = []
 
+	/* AutoShowOptions */
+	if (typeof config["autoShowOptions"] === "undefined") config["autoShowOptions"] = true
+
 	return config
 }
 
