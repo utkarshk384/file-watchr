@@ -1,12 +1,6 @@
-# Monorepo Watch
+# File Watchr
+A asynchronous, beautiful and customizable file watcher. File Watchr is a built on top of a popular package [chokidar](https://github.com/paulmillr/chokidar). 
 
-NOTE: This is a work in progress. Currently it's in its beta state.
-Any suggestions are warmly welcomed 😄.
-<br/>
-<br />
-A asynchronous, customizable file watcher for projects using lerna, yarn workspaces, and monorepos.
-
-<br/>
 <br/>
 
 ## Recommended Usage
