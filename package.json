@@ -13,7 +13,7 @@
   ],
   "types": "dist/types",
   "name": "file-watchr",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "A package to watch for file changes in a directory",
   "module": "dist/main/index.js",
   "exports": {
@@ -31,7 +31,6 @@
     "registry": "https://registry.npmjs.org/"
   },
   "type": "module",
-  
   "scripts": {
     "lint": "tsc --noEmit && eslint --ext .js,.jsx,.ts,.tsx src --fix",
     "build": "rm -rf dist && yarn build:package && yarn build:types",
